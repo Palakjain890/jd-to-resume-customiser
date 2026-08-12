@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Command-line interface for Resume Tailor Agent."""
+"""Command-line interface for JD To Resume Customiser."""
 import click
 import os
 from rich.console import Console
@@ -16,7 +16,7 @@ console = Console()
 
 @click.group()
 def cli():
-    """Resume Tailor Agent - Customize your resume for each job description."""
+    """JD To Resume Customiser - Customize your resume for each job description."""
     pass
 
 
@@ -33,7 +33,7 @@ def tailor(resume, job_description, output_dir):
         return
 
     console.print(Panel.fit(
-        f"[bold cyan]Resume Tailor Agent[/bold cyan]\n"
+        f"[bold cyan]JD To Resume Customiser[/bold cyan]\n"
         f"Provider: OpenAI | Model: {settings.model_name}",
         border_style="cyan"
     ))

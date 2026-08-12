@@ -1,4 +1,4 @@
-"""Configuration management for Resume Tailor Agent."""
+"""Configuration management for JD To Resume Customiser."""
 import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv

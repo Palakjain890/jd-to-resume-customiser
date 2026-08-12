@@ -1,4 +1,4 @@
-"""Streamlit web interface for Resume Tailor Agent."""
+"""Streamlit web interface for JD To Resume Customiser."""
 import streamlit as st
 import os
 import tempfile
@@ -9,7 +9,7 @@ from config import settings
 
 # Page configuration
 st.set_page_config(
-    page_title="Resume Tailor Agent",
+    page_title="JD To Resume Customiser",
     page_icon="📄",
     layout="wide"
 )
@@ -37,8 +37,8 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Header
-st.markdown('<div class="main-header">📄 Resume Tailor Agent</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-header">AI-powered resume customization for every job application</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">📄 JD To Resume Customiser</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">AI-Driven Resume Customisation for Every Opportunity</div>', unsafe_allow_html=True)
 
 # Validate configuration on app startup
 if not settings.validate_api_keys():
@@ -78,7 +78,7 @@ with st.sidebar:
     ### 📚 How to Use
     1. Upload your resume (PDF)
     2. Upload job description (PDF)
-    3. Click "Tailor My Resume"
+    3. Click "Customise My Resume"
     4. Download generated files
     """)
 
@@ -108,7 +108,7 @@ with analyze_button_column:
     analyze_only = st.button("🔍 Analyze Skill Gaps Only", use_container_width=True)
 
 with tailor_button_column:
-    tailor_button = st.button("✨ Tailor My Resume", type="primary", use_container_width=True)
+    tailor_button = st.button("✨ Customise My Resume", type="primary", use_container_width=True)
 
 # Process files
 if (tailor_button or analyze_only) and resume_file and job_description_file:
