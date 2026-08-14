@@ -16,7 +16,7 @@ def test_config_command_displays_settings(monkeypatch):
     assert result.exit_code == 0
     assert "Provider: OpenAI" in result.output
     assert "Model: gpt-4-turbo-preview" in result.output
-    assert "✓" in result.output or "✗" not in result.output
+    assert "Yes" in result.output
 
 
 def test_tailor_command_success(tmp_path, monkeypatch):

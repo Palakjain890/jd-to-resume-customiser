@@ -8,18 +8,53 @@ from config import settings
 class ResumeTailorAgent:
     """Agent that tailors resumes based on job descriptions."""
 
-    def __init__(self):
-        """Initialize the agent with configured LLM."""
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        model_name: Optional[str] = None,
+        model_version: Optional[str] = None,
+    ):
+        """
+        Initialize the agent with configured LLM.
+
+        Args:
+            api_key: Optional OpenAI API key override (falls back to settings).
+            base_url: Optional OpenAI API base URL override (falls back to settings).
+            model_name: Optional model name override (falls back to settings).
+            model_version: Optional model version override (falls back to settings).
+        """
+        self.api_key = api_key or settings.openai_api_key
+        self.base_url = base_url or settings.openai_url
+        self.model_name = model_name or settings.model_name
+        self.model_version = model_version or settings.model_version
         self.llm = self._get_llm()
         self._setup_chains()
 
     def _get_llm(self):
         """Get the configured OpenAI LLM."""
         return ChatOpenAI(
-            model=settings.model_name or "gpt-4-turbo-preview",
-            openai_api_key=settings.openai_api_key,
+            model=self.model_name or "gpt-4-turbo-preview",
+            openai_api_key=self.api_key,
+            openai_api_base=self.base_url,
             temperature=0.7
         )
+
+    def test_connection(self) -> bool:
+        """
+        Test that the configured LLM credentials work by making a minimal request.
+
+        Returns:
+            True if the connection succeeds.
+
+        Raises:
+            ConnectionError: If the request fails.
+        """
+        try:
+            self.llm.invoke("Respond with the single word: OK")
+            return True
+        except Exception as error:
+            raise ConnectionError(f"Failed to connect to OpenAI API: {str(error)}") from error
 
     def _setup_chains(self):
         """Setup LangChain chains for different tasks."""

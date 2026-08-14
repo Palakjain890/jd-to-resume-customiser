@@ -40,19 +40,35 @@ class DummyExpander:
         return None
 
 
+class DummySessionState(dict):
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError(name)
+
+    def __setattr__(self, name, value):
+        self[name] = value
+
+
 def test_app_imports_with_stubbed_streamlit(monkeypatch):
     streamlit = types.ModuleType("streamlit")
     streamlit.set_page_config = lambda *args, **kwargs: None
     streamlit.markdown = lambda *args, **kwargs: None
     streamlit.sidebar = DummyContext()
     streamlit.header = lambda *args, **kwargs: None
+    streamlit.caption = lambda *args, **kwargs: None
     streamlit.text_input = lambda *args, **kwargs: ""
     streamlit.button = lambda *args, **kwargs: False
+    streamlit.form = lambda *args, **kwargs: DummyContext()
+    streamlit.form_submit_button = lambda *args, **kwargs: False
     streamlit.file_uploader = lambda *args, **kwargs: None
     streamlit.divider = lambda *args, **kwargs: None
     streamlit.expander = lambda *args, **kwargs: DummyExpander()
     streamlit.stop = lambda *args, **kwargs: None
     streamlit.write = lambda *args, **kwargs: None
+    streamlit.session_state = DummySessionState()
+    streamlit.tabs = lambda labels: tuple(DummyContext() for _ in labels)
 
     def _columns(*args, **kwargs):
         if args and isinstance(args[0], (list, tuple)):

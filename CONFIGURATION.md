@@ -2,7 +2,13 @@
 
 ## Overview
 
-All important configuration variables are now loaded from `secrets.toml` (for Streamlit Cloud) or `.env` (for local development). **No input fields in the app** - configuration is read-only and must be set before deployment.
+Configuration variables can be supplied in three ways, in order of precedence:
+
+1. **In-app sidebar** - enter the values directly in the Streamlit sidebar and click
+   **Test Configuration**. The values are only used once the test connection succeeds,
+   and they apply for the rest of the session.
+2. **`secrets.toml`** - for Streamlit Cloud deployments.
+3. **`.env`** - for local development, used to pre-fill the sidebar fields.
 
 ## Configuration Variables
 
@@ -10,6 +16,13 @@ All important configuration variables are now loaded from `secrets.toml` (for St
 - `openai_url` - OpenAI API endpoint 
 - `model_name` - LLM model name 
 - `model_version` - API version
+
+## Using the In-App Configuration (No `.env` Required)
+
+1. Run the app: `streamlit run app.py`
+2. In the sidebar, enter your `OPENAI_API_KEY`, `OPENAI_URL`, `MODEL_NAME`, and `MODEL_VERSION`
+3. Click **Test Configuration** - the app makes a minimal request to confirm the credentials work
+4. Once verified, the entered values are used for every Analyze/Customise action in that session
 
 ## Local Development Setup
 

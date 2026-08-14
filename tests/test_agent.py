@@ -15,8 +15,49 @@ def test_get_llm_openai(monkeypatch):
     agent.ChatOpenAI.assert_called_once_with(
         model=settings.model_name or "gpt-4-turbo-preview",
         openai_api_key="openai-key",
+        openai_api_base=settings.openai_url,
         temperature=0.7
     )
+
+
+def test_get_llm_with_overrides(monkeypatch):
+    mock_llm = MagicMock()
+    monkeypatch.setattr(agent, "ChatOpenAI", MagicMock(return_value=mock_llm))
+
+    resume_agent = agent.ResumeTailorAgent(
+        api_key="user-key",
+        base_url="https://custom.openai.com/v1",
+        model_name="gpt-4",
+        model_version="2024-05-01",
+    )
+
+    assert resume_agent.llm is mock_llm
+    agent.ChatOpenAI.assert_called_once_with(
+        model="gpt-4",
+        openai_api_key="user-key",
+        openai_api_base="https://custom.openai.com/v1",
+        temperature=0.7
+    )
+
+
+def test_test_connection_success():
+    with patch.object(agent.ResumeTailorAgent, "_setup_chains", lambda self: None):
+        with patch.object(agent.ResumeTailorAgent, "_get_llm", return_value=MagicMock()):
+            resume_agent = agent.ResumeTailorAgent()
+
+    resume_agent.llm.invoke.return_value = "OK"
+    assert resume_agent.test_connection() is True
+    resume_agent.llm.invoke.assert_called_once()
+
+
+def test_test_connection_failure():
+    with patch.object(agent.ResumeTailorAgent, "_setup_chains", lambda self: None):
+        with patch.object(agent.ResumeTailorAgent, "_get_llm", return_value=MagicMock()):
+            resume_agent = agent.ResumeTailorAgent()
+
+    resume_agent.llm.invoke.side_effect = RuntimeError("bad key")
+    with pytest.raises(ConnectionError):
+        resume_agent.test_connection()
 
 
 @patch.object(agent.ResumeTailorAgent, "_setup_chains", lambda self: None)

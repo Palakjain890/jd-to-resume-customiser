@@ -72,7 +72,7 @@ def tailor(resume, job_description, output_dir):
                 output_dir
             )
 
-            progress.update(task, description="[green]✓ Complete!")
+            progress.update(task, description="[green]Complete!")
 
         # Display results
         console.print("\n[bold green]Success![/bold green] Generated files:")
@@ -118,7 +118,7 @@ def analyze(resume, job_description):
             agent = ResumeTailorAgent()
             analysis = agent.analyze_skill_gaps(resume_text, jd_text)
 
-            progress.update(task, description="[green]✓ Complete!")
+            progress.update(task, description="[green]Complete!")
 
         # Display analysis
         console.print("\n")
@@ -137,7 +137,7 @@ def config():
         f"[bold]Current Configuration[/bold]\n\n"
         f"Provider: [cyan]OpenAI[/cyan]\n"
         f"Model: [cyan]{settings.model_name}[/cyan]\n"
-        f"API Key Configured: [{'green]✓' if settings.validate_api_keys() else 'red]✗'}[/]\n",
+        f"API Key Configured: [{'green]Yes' if settings.validate_api_keys() else 'red]No'}[/]\n",
         border_style="blue"
     ))
 
