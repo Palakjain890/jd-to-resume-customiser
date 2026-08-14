@@ -1,7 +1,7 @@
 """LangChain agent for resume tailoring."""
 from typing import Dict, Optional
 from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from config import settings
 
 
@@ -33,6 +33,17 @@ class ResumeTailorAgent:
 
     def _get_llm(self):
         """Get the configured OpenAI LLM."""
+        if self.base_url and "azure.com" in self.base_url:
+            # Azure OpenAI requires a different client that builds the
+            # /openai/deployments/{deployment}/chat/completions?api-version=...
+            # URL shape instead of the plain OpenAI /chat/completions path.
+            return AzureChatOpenAI(
+                azure_endpoint=self.base_url,
+                azure_deployment=self.model_name,
+                api_version=self.model_version,
+                api_key=self.api_key,
+                temperature=0.7
+            )
         return ChatOpenAI(
             model=self.model_name or "gpt-4-turbo-preview",
             openai_api_key=self.api_key,
