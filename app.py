@@ -164,11 +164,32 @@ if (tailor_button or analyze_only) and resume_file and job_description_file:
                     if analyze_only:
                         st.write("Analyzing skill gaps...")
                         skill_gap_analysis = agent.analyze_skill_gaps(resume_text, job_description_text)
+
+                        st.write("Tailoring resume...")
+                        tailored_resume = agent.tailor_resume(resume_text, job_description_text)
+
+                        st.write("Creating resume PDF...")
+                        pdf_gen = PDFGenerator()
+                        output_dir = tempfile.mkdtemp()
+                        resume_pdf_path = os.path.join(output_dir, "tailored_resume.pdf")
+                        pdf_gen.generate_resume_pdf(tailored_resume, resume_pdf_path)
+
                         status.update(label="Analysis complete!", state="complete")
 
                         # Display analysis
                         st.subheader("Skill Gap Analysis")
                         st.markdown(skill_gap_analysis)
+
+                        st.subheader("Tailored Resume")
+                        st.markdown(tailored_resume)
+                        with open(resume_pdf_path, 'rb') as f:
+                            st.download_button(
+                                "Download Resume PDF",
+                                f.read(),
+                                file_name="tailored_resume.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
 
                     else:
                         st.write("Tailoring resume...")
@@ -246,4 +267,3 @@ st.markdown("""
     <p>Built with LangChain • Powered by Groq & OpenAI</p>
 </div>
 """, unsafe_allow_html=True)
-
