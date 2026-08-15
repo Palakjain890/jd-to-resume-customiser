@@ -174,22 +174,7 @@ if (tailor_button or analyze_only) and resume_file and job_description_file:
                         resume_pdf_path = os.path.join(output_dir, "tailored_resume.pdf")
                         pdf_gen.generate_resume_pdf(tailored_resume, resume_pdf_path)
 
-                        status.update(label="Analysis complete!", state="complete")
-
-                        # Display analysis
-                        st.subheader("Skill Gap Analysis")
-                        st.markdown(skill_gap_analysis)
-
-                        st.subheader("Tailored Resume")
-                        st.markdown(tailored_resume)
-                        with open(resume_pdf_path, 'rb') as f:
-                            st.download_button(
-                                "Download Resume PDF",
-                                f.read(),
-                                file_name="tailored_resume.pdf",
-                                mime="application/pdf",
-                                use_container_width=True
-                            )
+                        status.update(label="Analysis complete!", state="complete", expanded=True)
 
                     else:
                         st.write("Tailoring resume...")
@@ -211,43 +196,60 @@ if (tailor_button or analyze_only) and resume_file and job_description_file:
                             output_dir
                         )
 
-                        status.update(label="Complete!", state="complete")
+                        status.update(label="Complete!", state="complete", expanded=True)
 
-                        # Display results in tabs
-                        tab1, tab2, tab3 = st.tabs(["Tailored Resume", "Cover Letter", "Skill Gap Analysis"])
+                # Display results outside the status widget so they stay visible
+                if analyze_only:
+                    st.subheader("Skill Gap Analysis")
+                    st.markdown(skill_gap_analysis)
 
-                        with tab1:
-                            st.markdown(tailored_resume)
-                            with open(output_files['resume'], 'rb') as f:
-                                st.download_button(
-                                    "Download Resume PDF",
-                                    f.read(),
-                                    file_name="tailored_resume.pdf",
-                                    mime="application/pdf",
-                                    use_container_width=True
-                                )
+                    st.subheader("Tailored Resume")
+                    st.markdown(tailored_resume)
+                    with open(resume_pdf_path, 'rb') as f:
+                        st.download_button(
+                            "Download Resume PDF",
+                            f.read(),
+                            file_name="tailored_resume.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
 
-                        with tab2:
-                            st.markdown(cover_letter)
-                            with open(output_files['cover_letter'], 'rb') as f:
-                                st.download_button(
-                                    "Download Cover Letter PDF",
-                                    f.read(),
-                                    file_name="cover_letter.pdf",
-                                    mime="application/pdf",
-                                    use_container_width=True
-                                )
+                else:
+                    # Display results in tabs
+                    tab1, tab2, tab3 = st.tabs(["Tailored Resume", "Cover Letter", "Skill Gap Analysis"])
 
-                        with tab3:
-                            st.markdown(skill_gap_analysis)
-                            with open(output_files['analysis'], 'rb') as f:
-                                st.download_button(
-                                    "Download Analysis PDF",
-                                    f.read(),
-                                    file_name="skill_gap_analysis.pdf",
-                                    mime="application/pdf",
-                                    use_container_width=True
-                                )
+                    with tab1:
+                        st.markdown(tailored_resume)
+                        with open(output_files['resume'], 'rb') as f:
+                            st.download_button(
+                                "Download Resume PDF",
+                                f.read(),
+                                file_name="tailored_resume.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
+
+                    with tab2:
+                        st.markdown(cover_letter)
+                        with open(output_files['cover_letter'], 'rb') as f:
+                            st.download_button(
+                                "Download Cover Letter PDF",
+                                f.read(),
+                                file_name="cover_letter.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
+
+                    with tab3:
+                        st.markdown(skill_gap_analysis)
+                        with open(output_files['analysis'], 'rb') as f:
+                            st.download_button(
+                                "Download Analysis PDF",
+                                f.read(),
+                                file_name="skill_gap_analysis.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
 
                 # Cleanup temp files
                 os.unlink(resume_path)
