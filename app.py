@@ -55,8 +55,6 @@ with st.sidebar:
         st.error(f"{provider_label.upper()}_API_KEY is not set. Please configure your .env file.")
     else:
         st.text(f"Provider: {provider_label}")
-        st.text(f"Endpoint: {settings.openai_url}")
-        st.text(f"Model: {settings.model_name}")
 
         if st.button("Test Connection", use_container_width=True):
             with st.spinner("Testing connection..."):
@@ -71,7 +69,7 @@ with st.sidebar:
                     st.success("Connection successful.")
 
         if st.session_state.config_verified:
-            st.success(f"Active model: {settings.model_name} ({provider_label})")
+            st.success(f"Active model: {provider_label}")
         else:
             st.warning("Click 'Test Connection' to verify your credentials.")
 
