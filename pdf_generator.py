@@ -1,4 +1,5 @@
 """PDF generation utilities for creating tailored resumes and cover letters."""
+import re
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -6,6 +7,29 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
 from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER
 from datetime import datetime
 import os
+
+# Matches list item markers at the start of a line: "- ", "* ", "• ", "1. ", "1) "
+BULLET_PATTERN = re.compile(r'^(?:[-*\u2022]|\d+[.)])\s+')
+
+# Common resume section titles - rendered as headings even without markdown
+# markup, since the input resume (and LLM output) often uses plain section
+# names like "Experience" or "EXPERIENCE" rather than "# Experience".
+SECTION_HEADERS = {
+    'experience', 'work experience', 'professional experience',
+    'projects', 'personal projects',
+    'education',
+    'skills', 'technical skills', 'core skills',
+    'summary', 'professional summary', 'objective',
+    'certifications', 'achievements', 'awards',
+    'contact', 'profile', 'about', 'about me',
+    'publications', 'leadership', 'activities', 'interests',
+}
+
+
+def _looks_like_section_header(line: str) -> bool:
+    """Return True if the line is a standalone resume section title."""
+    candidate = line.rstrip(':').strip().lower()
+    return candidate in SECTION_HEADERS
 
 
 class PDFGenerator:
@@ -52,6 +76,15 @@ class PDFGenerator:
             leading=14
         ))
 
+        # Bullet/list item style
+        self.styles.add(ParagraphStyle(
+            name='CustomBullet',
+            parent=self.styles['CustomBody'],
+            leftIndent=0.2 * inch,
+            bulletIndent=0,
+            spaceAfter=4
+        ))
+
     def _clean_text(self, text: str) -> str:
         """Clean text for PDF generation, handling special characters."""
         # Replace problematic characters
@@ -66,12 +99,41 @@ class PDFGenerator:
             text = text.replace(old, new)
         return text
 
+    def _convert_inline_markdown(self, text: str) -> str:
+        """Convert simple markdown emphasis (bold/italic) to ReportLab markup.
+
+        Must be called on already-HTML-escaped text so the inserted
+        <b>/<i> tags survive and aren't re-escaped.
+        """
+        # Bold: **text** or __text__
+        text = re.sub(r'\*\*(.+?)\*\*', r'<b>\1</b>', text)
+        text = re.sub(r'__(.+?)__', r'<b>\1</b>', text)
+        # Italic: *text* or _text_ (single markers, not already consumed above)
+        text = re.sub(r'(?<!\*)\*([^*]+)\*(?!\*)', r'<i>\1</i>', text)
+        text = re.sub(r'(?<!_)_([^_]+)_(?!_)', r'<i>\1</i>', text)
+        return text
+
+    def _format_text(self, text: str) -> str:
+        """Escape HTML-sensitive characters and render markdown emphasis."""
+        return self._convert_inline_markdown(self._clean_text(text))
+
     def _parse_content_sections(self, content: str) -> list:
         """Parse content into sections based on markdown-style headers."""
         lines = content.split('\n')
         elements = []
 
         current_paragraph = []
+        current_is_bullet = False
+
+        def flush():
+            if not current_paragraph:
+                return
+            text = ' '.join(current_paragraph)
+            if current_is_bullet:
+                text = f"\u2022 {self._format_text(text)}"
+                elements.append(Paragraph(text, self.styles['CustomBullet']))
+            else:
+                elements.append(Paragraph(self._format_text(text), self.styles['CustomBody']))
 
         for line in lines:
             line = line.strip()
@@ -79,43 +141,60 @@ class PDFGenerator:
             # Check for headers (lines starting with # or ** or all caps)
             if line.startswith('#'):
                 # Save previous paragraph
-                if current_paragraph:
-                    text = ' '.join(current_paragraph)
-                    elements.append(Paragraph(self._clean_text(text), self.styles['CustomBody']))
+                had_content = bool(current_paragraph)
+                flush()
+                if had_content:
                     elements.append(Spacer(1, 0.1 * inch))
-                    current_paragraph = []
+                current_paragraph = []
+                current_is_bullet = False
 
                 # Add header
                 header_text = line.lstrip('#').strip()
-                elements.append(Paragraph(self._clean_text(header_text), self.styles['CustomHeading']))
+                elements.append(Paragraph(self._format_text(header_text), self.styles['CustomHeading']))
 
-            elif line.startswith('**') and line.endswith('**'):
+            elif line.startswith('**') and line.endswith('**') and len(line) > 4:
                 # Bold section header
-                if current_paragraph:
-                    text = ' '.join(current_paragraph)
-                    elements.append(Paragraph(self._clean_text(text), self.styles['CustomBody']))
+                had_content = bool(current_paragraph)
+                flush()
+                if had_content:
                     elements.append(Spacer(1, 0.1 * inch))
-                    current_paragraph = []
+                current_paragraph = []
+                current_is_bullet = False
 
                 header_text = line.strip('*').strip()
                 elements.append(Paragraph(f"<b>{self._clean_text(header_text)}</b>", self.styles['CustomBody']))
 
+            elif _looks_like_section_header(line):
+                # Plain section title (e.g. "Experience", "PROJECTS") with no markdown
+                had_content = bool(current_paragraph)
+                flush()
+                if had_content:
+                    elements.append(Spacer(1, 0.1 * inch))
+                current_paragraph = []
+                current_is_bullet = False
+
+                elements.append(Paragraph(self._format_text(line.rstrip(':')), self.styles['CustomHeading']))
+
             elif line == '':
                 # Empty line - paragraph break
+                flush()
                 if current_paragraph:
-                    text = ' '.join(current_paragraph)
-                    elements.append(Paragraph(self._clean_text(text), self.styles['CustomBody']))
                     elements.append(Spacer(1, 0.15 * inch))
-                    current_paragraph = []
+                current_paragraph = []
+                current_is_bullet = False
+
+            elif BULLET_PATTERN.match(line):
+                # Start of a new list item - flush whatever came before it
+                flush()
+                current_paragraph = [BULLET_PATTERN.sub('', line, count=1)]
+                current_is_bullet = True
 
             else:
-                # Regular text line
+                # Regular text line (continuation of paragraph or current bullet)
                 current_paragraph.append(line)
 
         # Add final paragraph
-        if current_paragraph:
-            text = ' '.join(current_paragraph)
-            elements.append(Paragraph(self._clean_text(text), self.styles['CustomBody']))
+        flush()
 
         return elements
 
