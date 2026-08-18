@@ -69,13 +69,12 @@ MODEL_NAME=your-model-name-here
 MODEL_VERSION=your-model-version-here
 ```
 
-### In-App Configuration
+### Verifying Configuration In-App
 
-You don't need a `.env` file to get started. The sidebar lets you enter your own
-`OPENAI_API_KEY`, `OPENAI_URL`, `MODEL_NAME`, and `MODEL_VERSION` directly in the app.
-Click **Test Configuration** to verify the credentials work before they are used to
-generate any documents. Once verified, that configuration is used for the rest of
-the session.
+Configuration is always loaded from `.env` / `secrets.toml` / environment variables - there
+are no manual input fields in the sidebar. The sidebar shows the currently loaded endpoint
+and model, and a **Test Connection** button to confirm the credentials work before you
+generate any documents.
 
 See [CONFIGURATION.md](CONFIGURATION.md) for detailed setup instructions.
 
@@ -86,8 +85,8 @@ See [CONFIGURATION.md](CONFIGURATION.md) for detailed setup instructions.
 ### Web Interface (Recommended)
 
 1. **Configure Credentials**
-   - Enter your `OPENAI_API_KEY`, `OPENAI_URL`, `MODEL_NAME`, and `MODEL_VERSION` in the sidebar
-   - Click "Test Configuration" and confirm the connection succeeds
+   - Set `OPENAI_API_KEY`, `OPENAI_URL`, `MODEL_NAME`, and `MODEL_VERSION` in your `.env` file
+   - In the sidebar, click "Test Connection" and confirm the connection succeeds
 
 2. **Upload Files**
    - Upload your resume (PDF)

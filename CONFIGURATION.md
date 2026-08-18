@@ -2,27 +2,41 @@
 
 ## Overview
 
-Configuration variables can be supplied in three ways, in order of precedence:
+Configuration is always driven by environment variables - there is no manual entry in the
+Streamlit sidebar. Values are supplied in order of precedence:
 
-1. **In-app sidebar** - enter the values directly in the Streamlit sidebar and click
-   **Test Configuration**. The values are only used once the test connection succeeds,
-   and they apply for the rest of the session.
-2. **`secrets.toml`** - for Streamlit Cloud deployments.
-3. **`.env`** - for local development, used to pre-fill the sidebar fields.
+1. **`secrets.toml`** - for Streamlit Cloud deployments.
+2. **`.env`** - for local development.
+3. **Environment variables** - set directly in the shell/host.
+
+The sidebar only displays the currently loaded endpoint/model and lets you click
+**Test Connection** to confirm the credentials work.
 
 ## Configuration Variables
 
 - `openai_api_key` - Your OpenAI API key
-- `openai_url` - OpenAI API endpoint 
-- `model_name` - LLM model name 
+- `openai_url` - OpenAI API endpoint
+- `model_name` - LLM model name
 - `model_version` - API version
 
-## Using the In-App Configuration (No `.env` Required)
+### Azure OpenAI
 
-1. Run the app: `streamlit run app.py`
-2. In the sidebar, enter your `OPENAI_API_KEY`, `OPENAI_URL`, `MODEL_NAME`, and `MODEL_VERSION`
-3. Click **Test Configuration** - the app makes a minimal request to confirm the credentials work
-4. Once verified, the entered values are used for every Analyze/Customise action in that session
+If `openai_url` contains `azure.com`, the app automatically switches to the Azure OpenAI
+client (`AzureChatOpenAI`) instead of the plain OpenAI client, since Azure uses a different
+URL shape (`/openai/deployments/{deployment}/chat/completions?api-version=...`). In this case:
+
+- `openai_url` - the Azure resource base endpoint, e.g. `https://<resource>.openai.azure.com/`
+- `model_name` - the **deployment name** (not the underlying model name), e.g. `gpt-5.4-hackathon-southcentralus`
+- `model_version` - the Azure **api-version** query parameter, e.g. `2024-12-01-preview`
+
+## Verifying Configuration In-App
+
+1. Set `OPENAI_API_KEY`, `OPENAI_URL`, `MODEL_NAME`, and `MODEL_VERSION` via `.env`,
+   `secrets.toml`, or environment variables (see below).
+2. Run the app: `streamlit run app.py`
+3. In the sidebar, click **Test Connection** - the app makes a minimal request to confirm
+   the loaded credentials work
+4. Once verified, the loaded configuration is used for every Analyze/Customise action
 
 ## Local Development Setup
 

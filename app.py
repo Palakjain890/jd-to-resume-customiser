@@ -40,61 +40,44 @@ st.markdown("""
 st.markdown('<div class="main-header">JD To Resume Customiser</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-header">AI-Driven Resume Customisation for Every Opportunity</div>', unsafe_allow_html=True)
 
-# Initialize session state for user-supplied configuration
+# Initialize session state for configuration status
 if "config_verified" not in st.session_state:
-    st.session_state.config_verified = settings.validate_api_keys()
-if "openai_api_key" not in st.session_state:
-    st.session_state.openai_api_key = settings.openai_api_key
-if "openai_url" not in st.session_state:
-    st.session_state.openai_url = settings.openai_url
-if "model_name" not in st.session_state:
-    st.session_state.model_name = settings.model_name
-if "model_version" not in st.session_state:
-    st.session_state.model_version = settings.model_version
+    st.session_state.config_verified = False
 
 # Sidebar for configuration
 with st.sidebar:
     st.header("Configuration")
-    st.caption("Enter your own OpenAI credentials, test the connection, then use them below.")
+    st.caption("Configuration is loaded automatically from the .env file / environment variables.")
 
-    with st.form("config_form"):
-        api_key_input = st.text_input(
-            "OpenAI API Key", value=st.session_state.openai_api_key, type="password"
-        )
-        url_input = st.text_input("OpenAI URL", value=st.session_state.openai_url)
-        model_name_input = st.text_input("Model Name", value=st.session_state.model_name)
-        model_version_input = st.text_input("Model Version", value=st.session_state.model_version)
-        test_submitted = st.form_submit_button("Test Configuration")
+    provider_label = "Azure OpenAI" if "azure.com" in (settings.openai_url or "") else "OpenAI"
 
-    if test_submitted:
-        with st.spinner("Testing connection..."):
-            try:
-                test_agent = ResumeTailorAgent(
-                    api_key=api_key_input,
-                    base_url=url_input,
-                    model_name=model_name_input,
-                    model_version=model_version_input,
-                )
-                test_agent.test_connection()
-            except Exception as e:
-                st.session_state.config_verified = False
-                st.error(f"Connection failed: {str(e)}")
-            else:
-                st.session_state.config_verified = True
-                st.session_state.openai_api_key = api_key_input
-                st.session_state.openai_url = url_input
-                st.session_state.model_name = model_name_input
-                st.session_state.model_version = model_version_input
-                st.success("Connection successful. Configuration saved.")
-
-    if st.session_state.config_verified:
-        st.success(f"Active model: {st.session_state.model_name}")
+    if not settings.validate_api_keys():
+        st.error(f"{provider_label.upper()}_API_KEY is not set. Please configure your .env file.")
     else:
-        st.warning("Configuration not verified. Test your credentials to continue.")
+        st.text(f"Provider: {provider_label}")
+        st.text(f"Endpoint: {settings.openai_url}")
+        st.text(f"Model: {settings.model_name}")
+
+        if st.button("Test Connection", use_container_width=True):
+            with st.spinner("Testing connection..."):
+                try:
+                    test_agent = ResumeTailorAgent()
+                    test_agent.test_connection()
+                except Exception as e:
+                    st.session_state.config_verified = False
+                    st.error(f"Connection failed: {str(e)}")
+                else:
+                    st.session_state.config_verified = True
+                    st.success("Connection successful.")
+
+        if st.session_state.config_verified:
+            st.success(f"Active model: {settings.model_name} ({provider_label})")
+        else:
+            st.warning("Click 'Test Connection' to verify your credentials.")
 
     st.markdown("""
     ### How to Use
-    1. Enter and test your OpenAI configuration
+    1. Test your configuration (loaded from .env)
     2. Upload your resume (PDF)
     3. Upload job description (PDF)
     4. Click "Customise My Resume"
@@ -154,12 +137,7 @@ if (tailor_button or analyze_only) and resume_file and job_description_file:
                     job_description_text = ResumeParser.extract_text_from_pdf(job_description_path)
 
                     st.write("Initializing AI agent...")
-                    agent = ResumeTailorAgent(
-                        api_key=st.session_state.openai_api_key,
-                        base_url=st.session_state.openai_url,
-                        model_name=st.session_state.model_name,
-                        model_version=st.session_state.model_version,
-                    )
+                    agent = ResumeTailorAgent()
 
                     if analyze_only:
                         st.write("Analyzing skill gaps...")
@@ -266,6 +244,6 @@ elif (tailor_button or analyze_only):
 st.divider()
 st.markdown("""
 <div style='text-align: center; color: #7F8C8D; padding: 1rem;'>
-    <p>Built with LangChain • Powered by Groq & OpenAI</p>
+    <p>Built with LangChain • Powered by Azure OpenAI</p>
 </div>
 """, unsafe_allow_html=True)

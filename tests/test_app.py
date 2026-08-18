@@ -59,6 +59,7 @@ def test_app_imports_with_stubbed_streamlit(monkeypatch):
     streamlit.header = lambda *args, **kwargs: None
     streamlit.caption = lambda *args, **kwargs: None
     streamlit.text_input = lambda *args, **kwargs: ""
+    streamlit.text = lambda *args, **kwargs: None
     streamlit.button = lambda *args, **kwargs: False
     streamlit.form = lambda *args, **kwargs: DummyContext()
     streamlit.form_submit_button = lambda *args, **kwargs: False
